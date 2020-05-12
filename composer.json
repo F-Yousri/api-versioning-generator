@@ -1,0 +1,58 @@
+{
+    "name": "f-yousri/api-versioning",
+    "description": "Makes it easy to version APIs.",
+    "keywords": [
+        "f-yousri",
+        "api-versioning"
+    ],
+    "homepage": "https://github.com/f-yousri/api-versioning",
+    "license": "MIT",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Fahd Yousri",
+            "email": "fahdyousri@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^7.2",
+        "illuminate/support": "^6.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^4.0",
+        "phpunit/phpunit": "^8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "FYousri\\APIVersioning\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "FYousri\\APIVersioning\\Tests\\": "tests"
+        },
+        "files": [
+            "../src/helpers.php"
+        ]
+    },
+    "minimum-stability": "dev",
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "test-coverage": "vendor/bin/phpunit --coverage-html coverage"
+
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "FYousri\\APIVersioning\\APIVersioningServiceProvider"
+            ],
+            "aliases": {
+                "APIVersioning": "FYousri\\APIVersioning\\APIVersioningFacade"
+            }
+        }
+    }
+}
