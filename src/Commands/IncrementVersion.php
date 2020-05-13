@@ -5,6 +5,7 @@ namespace FYousri\APIVersioning\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Symfony\Component\Console\Input\InputOption;
 
@@ -62,12 +63,39 @@ class IncrementVersion extends Command
         $this->files = $files;
         $this->composer = app()['composer'];
     }
+    
     public function handle()
-    {                  
-        if($module = $this->option('module')) {
+    {
+        $force = $this->option("force") ? $this->option("force") : 0;
+
+        $module = $this->option('module');
+
+        // get and increment the module version    
+        $moduleRecord = DB::table('api_versions')->where('module', $module)->first();
+        $previousVersion= $moduleRecord ? $moduleRecord->version : 0;
+        $this->version = $previousVersion + 1;
+        
+        if($module == 'app') {
+            $this->paths = [
+                'apiRoutesPath'                  => config('api-versioning.paths.routes') . '/v' . $this->version . '.php',
+                'apiRoutesPreviousVersionPath'   => config('api-versioning.paths.routes') . '/v' . $previousVersion . '.php',
+                'routeServiceProviderPath'       => config('api-versioning.paths.routeServiceProvider'),
+                'requestsPath'                   => config('api-versioning.paths.requests') . '/v' . $this->version . '/APIRequest.php',
+                'controllersPath'                => config('api-versioning.paths.controllers') . '/v' . $this->version . '/APIController.php',
+                'transformersPath'               => config('api-versioning.paths.transformers') . '/v' . $this->version . '/APITransformer.php'
+            ];
+    
+
+            if ($this->files->exists($this->paths['apiRoutesPath'])) {
+                if (!($force or $this->confirm(trans("version_files_already_exist")))) {
+                    $this->warn('command aborted with no changes.');
+                    return 0;
+                }
+            }
+
+
+        } else {
             // Increment and get the module version 
-            $previousVersion= Cache::get("versions.{$module}", 0);
-            $this->version = $previousVersion + 1;
 
             $this->paths = [
                 'apiRoutesPath'                  => module_path($this->option('module')) . config('api-versioning.module-paths.routes') . '/v' . $this->version . '.php',
@@ -78,25 +106,21 @@ class IncrementVersion extends Command
                 'transformersPath'               => module_path($this->option('module')) . config('api-versioning.module-paths.transformers') . '/v' . $this->version . '/APITransformer.php'
             ];
 
-            Cache::increment("versions.{$module}", 1);
-
-        } else {
-            // Increment and get the app version 
-            $previousVersion = Cache::get("versions.app", 0);
-            $this->version = $previousVersion + 1;
-
-            $this->paths = [
-                'apiRoutesPath'                  => config('api-versioning.paths.routes') . '/v' . $this->version . '.php',
-                'apiRoutesPreviousVersionPath'   => config('api-versioning.paths.routes') . '/v' . $previousVersion . '.php',
-                'routeServiceProviderPath'       => config('api-versioning.paths.routeServiceProvider'),
-                'requestsPath'                   => config('api-versioning.paths.requests') . '/v' . $this->version . '/APIRequest.php',
-                'controllersPath'                => config('api-versioning.paths.controllers') . '/v' . $this->version . '/APIController.php',
-                'transformersPath'               => config('api-versioning.paths.transformers') . '/v' . $this->version . '/APITransformer.php'
-            ];
-    
-            Cache::increment("versions.app", 1);
+            if ($this->files->exists($this->paths['apiRoutesPath'])) {
+                if (!($force or $this->confirm(trans("version_files_already_exist")))) {
+                    $this->warn('command aborted with no changes.');
+                    return 0;
+                }
+            }
         }
         
+        // update or insert the version into database
+        DB::table('api_versions')->upsert(
+            ['module' => $module, 'version' => $this->version, 'created_at' => now(), 'updated_at' => now()],
+            'module',
+            ['version', 'updated_at']
+        );
+
         $this->files->put($this->paths['routeServiceProviderPath'] . '/RouteServiceProvider.php', $this->compileRouteServiceProviderStub());
 
         $this->makeDirectory($this->paths['apiRoutesPath']);
@@ -218,7 +242,7 @@ class IncrementVersion extends Command
     {
     
         if ($moduleName = $this->option('module')) {
-            $routePath = "module_path('$moduleName', 'Routes/API/v{$this->version}.php'";
+            $routePath = "module_path('$moduleName', 'Routes/API/v{$this->version}.php)'";
             $stub = str_replace('{{route_path}}', $routePath, $stub);
             return $this;
         }
@@ -294,7 +318,7 @@ class IncrementVersion extends Command
     protected function getOptions()
     {
         return [
-            ['module', null, InputOption::VALUE_OPTIONAL, 'Want a module version change?', null],
+            ['module', null, InputOption::VALUE_OPTIONAL, 'Want a module version change?', 'app'],
         ];
     }
 }

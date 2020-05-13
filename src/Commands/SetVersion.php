@@ -4,6 +4,7 @@ namespace FYousri\APIVersioning\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\Console\Input\InputOption;
 
 class SetVersion extends Command 
@@ -35,10 +36,18 @@ class SetVersion extends Command
 
         if($module = $this->option('module')) {
             // Set the module version 
-            Cache::put("versions.{$module}", $this->version);
+            DB::table('api_versions')->upsert(
+                ['module' => $module, 'version' => $this->version, 'created_at' => now(), 'updated_at' => now()],
+                'module',
+                ['version', 'updated_at']
+            );
         } else {
-            // Set the app version     
-            Cache::put("versions.app", $this->version);
+            // Set the app version
+            DB::table('api_versions')->upsert(
+                ['module' => 'app', 'version' => $this->version, 'created_at' => now(), 'updated_at' => now()],
+                'module',
+                ['version', 'updated_at']
+            );
         }
      
         $this->info("Version set to {$this->version} successfully.");

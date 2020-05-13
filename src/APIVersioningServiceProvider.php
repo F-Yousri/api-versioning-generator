@@ -18,6 +18,8 @@ class APIVersioningServiceProvider extends ServiceProvider
                 __DIR__.'/../config/config.php' => config_path('api-versioning.php'),
             ], 'config');
 
+            $this->loadMigrationsFrom(__DIR__.'/database/migrations');
+
             // Registering package commands.
             $this->commands([
                 IncrementVersion::class,
