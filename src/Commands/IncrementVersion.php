@@ -218,7 +218,9 @@ class IncrementVersion extends Command
             return $this;
         }
         
-        if ($moduleName = $this->option('module') !== 'app') {
+        $moduleName = $this->option('module');
+        
+        if ($moduleName !== 'app') {
             $routePath = "/Routes/API/v{$previousVersion}.php";
             $fallback = "Route::name('v{$previousVersion}')->group(" . 'module_path(' . "'{$moduleName}', '{$routePath}'));";
             $stub = str_replace('{{fallback}}', $fallback, $stub);
@@ -241,7 +243,9 @@ class IncrementVersion extends Command
     protected function replacePathFunction(&$stub)
     {
     
-        if ($moduleName = $this->option('module') !== 'app') {
+        $moduleName = $this->option('module');
+        
+        if ($moduleName !== 'app') {
             $routePath = "module_path('$moduleName', 'Routes/API/v{$this->version}.php')";
             $stub = str_replace('{{route_path}}', $routePath, $stub);
             return $this;
@@ -255,7 +259,9 @@ class IncrementVersion extends Command
 
     protected function replaceNamespace(&$stub)
     {
-        if ($moduleName = $this->option('module') !== 'app') {
+        $moduleName = $this->option('module');
+        
+        if ($moduleName !== 'app') {
             $requestNamespace       = "Modules\\{$moduleName}\\Http\Requests\\v{$this->version}";
             $controllerNamespace    = "Modules\\{$moduleName}\\Http\Controllers\\v{$this->version}";
             $transformerNamespace   = "Modules\\{$moduleName}\\Transformers\\v{$this->version}";
