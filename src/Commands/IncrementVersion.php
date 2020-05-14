@@ -319,6 +319,7 @@ class IncrementVersion extends Command
     {
         return [
             ['module', null, InputOption::VALUE_OPTIONAL, 'Want a module version change?', 'app'],
+            ['force', null, InputOption::VALUE_NONE, 'don\'t ask for permission', false],
         ];
     }
 }
