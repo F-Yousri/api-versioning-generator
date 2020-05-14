@@ -66,7 +66,7 @@ class IncrementVersion extends Command
     
     public function handle()
     {
-        $force = $this->option("force") ? $this->option("force") : 0;
+        $force = $this->option("force");
 
         $module = $this->option('module');
 
@@ -319,7 +319,7 @@ class IncrementVersion extends Command
     {
         return [
             ['module', null, InputOption::VALUE_OPTIONAL, 'Want a module version change?', 'app'],
-            ['force', null, InputOption::VALUE_NONE, 'don\'t ask for permission', false],
+            ['force', null, InputOption::VALUE_NONE, 'don\'t ask for permission'],
         ];
     }
 }
